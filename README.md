@@ -1,95 +1,44 @@
-<img src=Technotes/Images/icon_1024.png height=128 width=128 style="display: block; margin: auto;"> 
+# NetNewsWire with YouTube Enhancement
 
-# NetNewsWire
+This is a fork of [NetNewsWire](https://github.com/Ranchero-Software/NetNewsWire) that adds automatic YouTube video description fetching for YouTube RSS feeds.
 
-NetNewsWire is a free and open-source feed reader for macOS and iOS.
+## What This Does
 
-It supports [RSS](https://cyber.harvard.edu/rss/rss.html), [Atom](https://datatracker.ietf.org/doc/html/rfc4287), [JSON Feed](https://jsonfeed.org/), and [RSS-in-JSON](https://github.com/scripting/Scripting-News/blob/master/rss-in-json/README.md) formats.
+When you subscribe to YouTube channels via RSS in NetNewsWire, the feed only includes video titles - no descriptions or transcripts. This enhancement automatically fetches and displays the full video description when you select a YouTube video in your feed.
 
-More info: [https://netnewswire.com/](https://netnewswire.com/)
+## Why This Fork Exists
 
-You can [report bugs and make feature requests](https://github.com/Ranchero-Software/NetNewsWire/issues) here on GitHub. You can also [read change notes](https://github.com/Ranchero-Software/NetNewsWire/releases/) for current and previous releases.
+YouTube's RSS feeds are sparse, containing only:
+- Video title
+- Link to YouTube
+- Thumbnail
+- Basic metadata
 
-Here’s [How to Support NetNewsWire](Technotes/HowToSupportNetNewsWire.markdown). Spoiler: don’t send money. :)
+The actual video description (which often contains timestamps, links, and important context) is not included in the RSS feed. This fork adds that missing information by making YouTube API calls when you view a video.
 
-(NetNewsWire’s Help menu has these links, so you don’t have to remember to come back to this page.)
+## Technical Approach
 
-#### Community
+This enhancement works at the display layer rather than modifying NetNewsWire's core RSS parsing:
 
-[Join the Slack group](https://netnewswire.com/slack) to talk with other NetNewsWire users — and to help out, if you’d like to, by testing, coding, writing, providing feedback, or just helping us think things through. Everybody is welcome and encouraged to join.
+1. When an article is displayed, it checks if the URL is a YouTube video
+2. If so, it extracts the video ID and fetches the description via YouTube Data API v3
+3. The description is then injected into the article view using JavaScript
 
-Every community member is expected to abide by the [code of conduct](CONTRIBUTING.md#code-of-conduct) which is included in the [Contributing](CONTRIBUTING.md) page.
+This approach was chosen to:
+- Minimize changes to NetNewsWire's architecture
+- Only fetch data for videos you actually view (API efficiency)
+- Keep the enhancement completely separate from core RSS functionality
 
-#### Pull Requests
+**The entire implementation consists of:**
+- **5 lines added** to `DetailWebViewController.swift` to check for YouTube videos and call the enhancement
+- **One new file**,`YouTubeVideoInfo.swift` containing all YouTube-specific logic
 
-See the [Contributing](CONTRIBUTING.md) page for our process. It’s pretty straightforward.
+This minimal footprint makes the enhancement easy to review, maintain, or remove if needed.
 
-#### Building
+## Setup
 
-You can build and test NetNewsWire without a paid developer account.
-
-```bash
-git clone https://github.com/Ranchero-Software/NetNewsWire.git
-```
-
-You can locally override the Xcode settings for code signing
-by creating a `DeveloperSettings.xcconfig` file locally at the appropriate path.
-This allows for a pristine project with code signing set up with the appropriate
-developer ID and certificates, and for developer to be able to have local settings
-without needing to check in anything into source control.
-
-You can do this in one of two ways: using the included `setup.sh` script or by creating the folder structure and file manually.
-
-##### Using `setup.sh`
-
-- Open Terminal and `cd` into the NetNewsWire directory. 
-- Run this command to ensure you have execution rights for the script: `chmod +x setup.sh`
-- Execute the script with the following command: `./setup.sh` and complete the answers.
-
-##### Manually 
-
-Make a directory `SharedXcodeSettings` next to where you have this repository.
-
-The directory structure is:
-
-```
-directory/
-  SharedXcodeSettings/
-    DeveloperSettings.xcconfig
-  NetNewsWire/
-    NetNewsWire.xcodeproj
-```
-Example:
-
-If your NetNewsWire Xcode project file is at:
-`/Users/name/projects/NetNewsWire/NetNewsWire.xcodeproj`
-
-Create your `DeveloperSettings.xcconfig` file at
-`/Users/name/projects/SharedXcodeSettings/DeveloperSettings.xcconfig`
-
-Then create a plain text file in it: `SharedXcodeSettings/DeveloperSettings.xcconfig` and
-give it the contents:
-
-```
-CODE_SIGN_IDENTITY = Mac Developer
-DEVELOPMENT_TEAM = <Your Team ID>
-CODE_SIGN_STYLE = Automatic
-ORGANIZATION_IDENTIFIER = <Your Domain Name Reversed>
-DEVELOPER_ENTITLEMENTS = -dev
-PROVISIONING_PROFILE_SPECIFIER =
-```
-
-Set `DEVELOPMENT_TEAM` to your Apple supplied development team.  You can use Keychain
-Access to [find your development team ID](/Technotes/FindingYourDevelopmentTeamID.md).
-Set `ORGANIZATION_IDENTIFIER` to a reversed domain name that you control or have made up.
-Note that `PROVISIONING_PROFILE_SPECIFIER` should not have a value associated with it.
-
-You can now open the `NetNewsWire.xccodeproj` in Xcode.
-
-Now you should be able to build without code signing errors and without modifying
-the NetNewsWire Xcode project.  This is a special build of NetNewsWire with some
-functionality disabled.  This is because we have API keys that can't be stored in the
-repository or shared between developers.  Certain account types, like iCloud and Feedly, aren't
-enabled and the Reader View isn't enabled because of this.
-
-If you have any problems, we will help you out in Slack ([see above](README.md#Community)).
+1. Clone this fork and build in Xcode (see original NetNewsWire build instructions)
+2. Get a YouTube Data API v3 key from [Google Cloud Console](https://console.cloud.google.com/)
+3. Add your API key to `YouTubeVideoInfo.swift`:
+   ```swift
+   static let apiKey = "YOUR_API_KEY_HERE"
