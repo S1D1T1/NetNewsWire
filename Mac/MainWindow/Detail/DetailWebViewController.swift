@@ -326,7 +326,18 @@ private extension DetailWebViewController {
 			rendering = ArticleRenderer.loadingHTML(theme: theme)
 		case .article(let article, _):
 			detailIconSchemeHandler.currentArticle = article
-			rendering = ArticleRenderer.articleHTML(article: article, theme: theme)
+
+			/// S1D1T1: patch in here to show youtube video info
+			if let articleURL = article.url,
+			   YouTubeVideoInfo.isYouTubeVideo(articleURL) {
+				let tmpRendering = ArticleRenderer.articleHTML(article: article, theme: theme)
+				rendering = addYouTubeInfo(articleURL,tmpRendering)
+			}
+			else {
+				rendering = ArticleRenderer.articleHTML(article: article, theme: theme)
+			}
+			/// S1D1T1: end patch 
+
 		case .extracted(let article, let extractedArticle, _):
 			detailIconSchemeHandler.currentArticle = article
 			rendering = ArticleRenderer.articleHTML(article: article, extractedArticle: extractedArticle, theme: theme)
