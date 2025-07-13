@@ -5,7 +5,16 @@ This is a fork of [NetNewsWire](https://github.com/Ranchero-Software/NetNewsWire
 
 ## What This Does
 
-When you subscribe to YouTube channels via RSS in NetNewsWire, the feed only includes video titles - no descriptions or transcripts. This enhancement automatically fetches and displays the full video description when you select a YouTube video in your feed.
+YouTube channels' RSS feed only includes video titles - no descriptions or transcripts. This enhancement automatically fetches and displays the full video description when you select a YouTube video in your feed.  
+It also indicates when entries are youtube "shorts", by prepending 📱 to the item's title.
+
+### Without Video descriptions & thumbnails:
+![Screenshot 2025-07-13 at 3 06 20 PM](https://github.com/user-attachments/assets/91aa628f-f8b5-4c97-8768-46138a1fc7bf)
+
+
+### With Video descriptions & thumbnails:
+![Screenshot 2025-07-13 at 3 05 11 PM](https://github.com/user-attachments/assets/7f7f0c54-9c80-47fc-9685-e5e8a8c0f65b)
+
 
 ## Why This Fork Exists
 
@@ -15,9 +24,11 @@ YouTube's RSS feeds are sparse, containing only:
 - Thumbnail
 - Basic metadata
 
-The actual video description (which often contains timestamps, links, and important context) is not included in the RSS feed. This fork adds that missing information by making YouTube API calls when you view a video.
+The actual video description (which often contains timestamps, links, and important context) is not included in the RSS feed. This fork adds that missing information by making YouTube API calls when you view a video. In short, it's the stuff I use to determine if I actually want to watch.
 
 ## Technical Approach
+
+This enhancement only uses Google's official YouTube APIs.
 
 This enhancement works at the display layer rather than modifying NetNewsWire's core RSS parsing:
 
@@ -33,8 +44,6 @@ This approach was chosen to:
 **The entire implementation consists of:**
 - **5 lines added** to `DetailWebViewController.swift` to check for YouTube videos and call the enhancement
 - **One new file**,`YouTubeVideoInfo.swift` containing all YouTube-specific logic
-
-This minimal footprint makes the enhancement easy to review, maintain, or remove if needed.
 
 ## Future 
 potential feature enhancement: batch retrieve/ import all YT subscriptions as feeds.  
