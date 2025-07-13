@@ -4,10 +4,10 @@
 //
 // added by S1D1T1 to display youtube video DX.
 
-
-///https://claude.ai/share/1223596b-01bc-432f-a0d6-d5ac5b24cf70
+/// https://claude.ai/share/1223596b-01bc-432f-a0d6-d5ac5b24cf70
 
 import Foundation
+import Articles
 
 class YouTubeVideoInfo {
 	static let apiKey = "<YOUR API KEY HERE>"
@@ -41,14 +41,59 @@ class YouTubeVideoInfo {
 		return extractVideoID(from: article)
 	}
 
+
+	static func parseDuration(_ iso8601: String) -> String {
+		// Remove PT prefix
+		var duration = iso8601
+		if duration.hasPrefix("PT") {
+			duration = String(duration.dropFirst(2))
+		}
+
+		var result = ""
+
+		// Extract hours
+		if let hRange = duration.range(of: "H") {
+			let hours = duration[..<hRange.lowerBound]
+			result += "\(hours):"
+			duration = String(duration[hRange.upperBound...])
+		}
+
+		// Extract minutes
+		if let mRange = duration.range(of: "M") {
+			let minutes = duration[..<mRange.lowerBound]
+			if result.isEmpty {
+				result = "\(minutes):"
+			} else {
+				result += String(format: "%02d:", Int(minutes) ?? 0)
+			}
+			duration = String(duration[mRange.upperBound...])
+		} else if !result.isEmpty {
+			result += "00:"
+		}
+
+		// Extract seconds
+		if let sRange = duration.range(of: "S") {
+			let seconds = duration[..<sRange.lowerBound]
+			if result.isEmpty {
+				result = "0:\(String(format: "%02d", Int(seconds) ?? 0))"
+			} else {
+				result += String(format: "%02d", Int(seconds) ?? 0)
+			}
+		} else if !result.isEmpty {
+			result += "00"
+		}
+
+		return result
+	}
+
 	/// using Youtube official API, get the accompaying text beneath a video. This is not in the feed data.
 	/// requires an API key.
-	static func fetchVideoDescription(_ videoID: String) async -> String? {
+	static func fetchVideoDescription(_ videoID: String) async -> (String,String)? {
 		guard apiKey != "<YOUR API KEY HERE>" else {
 			print("**API KEY MUST BE SUPPLIED BEFORE YOU CAN RETRIEVE YOUTUBE VIDEO DESCRIPTIONS**")
-			return String("**API KEY MUST BE SUPPLIED BEFORE YOU CAN RETRIEVE YOUTUBE VIDEO DESCRIPTIONS**")
+			return ("**API KEY MUST BE SUPPLIED BEFORE YOU CAN RETRIEVE YOUTUBE VIDEO DESCRIPTIONS**","")
 		}
-		let urlString = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=\(videoID)&key=\(apiKey)"
+		let urlString = "https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=\(videoID)&key=\(apiKey)"
 		guard let url = URL(string: urlString) else { return nil }
 
 		do {
@@ -60,7 +105,19 @@ class YouTubeVideoInfo {
 			   let snippet = firstItem["snippet"] as? [String: Any],
 			   let description = snippet["description"] as? String
 			{
-				return description
+				// extract duration
+				var durationString = "Duration: "
+				if let details = firstItem["contentDetails"] as? [String:Any],
+				   let duration = details["duration"] as? String {
+					let durationValue = parseDuration(duration)
+					if durationValue.isEmpty {
+						durationString += "Unknown"
+					}
+					else {
+						durationString += durationValue
+					}
+				}
+				return (description,durationString)
 			}
 		} catch {
 			print("YouTube API error: \(error)")
@@ -70,7 +127,7 @@ class YouTubeVideoInfo {
 	}
 
 	/// formatting for video dx
-	static func formatDescriptionAsHTML(_ description: String) -> String {
+	static func formatDescriptionAsHTML(_ description: String,_ duration:String) -> String {
 		// Convert line breaks to <br> tags
 		let htmlDescription = description
 			.replacingOccurrences(of: "&", with: "&amp;")
@@ -81,6 +138,7 @@ class YouTubeVideoInfo {
 		return """
 		<div style='background: #f9f9f9; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #ff0000;'>
 			<h3 style='margin-top: 0; color: #333;'>Video Description</h3>
+			<h4>\(duration)</h4>
 			<div style='color: #555; line-height: 1.6;'>\(htmlDescription)</div>
 		</div>
 		"""
@@ -93,7 +151,6 @@ class YouTubeVideoInfo {
 		return "https://i.ytimg.com/vi/\(videoID)/hqdefault.jpg"
 		// Or use maxresdefault.jpg for higher quality
 	}
-
 }
 
 /// extend DetailWebViewController to display extra info for Youtube Videos. Including video description and thumbnail
@@ -126,8 +183,8 @@ extension DetailWebViewController {
 		// Start async fetch
 		// when it returns, inject the data into the placeholder html.
 		Task {
-			if let description = await YouTubeVideoInfo.fetchVideoDescription(videoID) {
-				let formattedHTML = YouTubeVideoInfo.formatDescriptionAsHTML(description)
+			if let (description,duration) = await YouTubeVideoInfo.fetchVideoDescription(videoID) {
+				let formattedHTML = YouTubeVideoInfo.formatDescriptionAsHTML(description,duration)
 
 				// Update the WebView content
 				await MainActor.run {
@@ -150,3 +207,4 @@ extension DetailWebViewController {
 		)
 	}
 }
+
