@@ -42,6 +42,7 @@ This approach was chosen to:
 - Keep the enhancement completely separate from core RSS functionality
 
 **The entire implementation consists of:**
+- **couple lines added** to `ArticleStringFormatter` for detecting and displaying YouTube Shorts titles (prepend "📱")
 - **5 lines added** to `DetailWebViewController.swift` to check for YouTube videos and call the enhancement
 - **One new file**,`YouTubeVideoInfo.swift` containing all YouTube-specific logic
 
