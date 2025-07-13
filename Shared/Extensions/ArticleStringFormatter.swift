@@ -61,6 +61,11 @@ struct ArticleStringFormatter {
 			return cachedTitle
 		}
 
+		// Add Youtube Short indicator
+		if YouTubeVideoInfo.isYouTubeShort(article) {
+			title = "📱 " + title
+		}
+
 		var s = title.replacingOccurrences(of: "\n", with: "")
 		s = s.replacingOccurrences(of: "\r", with: "")
 		s = s.replacingOccurrences(of: "\t", with: "")
