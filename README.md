@@ -24,7 +24,7 @@ YouTube's RSS feeds are sparse, containing only:
 - Thumbnail
 - Basic metadata
 
-The actual video description (which often contains timestamps, links, and important context) is not included in the RSS feed. This fork adds that missing information by making YouTube API calls when you view a video. In short, it's the stuff I use to determine if I actually want to watch.
+The actual video description (which often contains timestamps, links, and important context) is not included in the RSS feed. This fork adds that missing information by making YouTube API calls when you select a video in the timeline. In short, it's the stuff I use to determine if I actually want to watch.
 
 ## Technical Approach
 
