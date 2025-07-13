@@ -42,3 +42,4 @@ This minimal footprint makes the enhancement easy to review, maintain, or remove
 3. Add your API key to `YouTubeVideoInfo.swift`:
    ```swift
    static let apiKey = "YOUR_API_KEY_HERE"
+**You MUST insert an API Key, or no video descriptions will appear**
