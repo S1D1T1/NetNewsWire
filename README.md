@@ -1,6 +1,7 @@
 # NetNewsWire with YouTube Enhancement
 
-This is a fork of [NetNewsWire](https://github.com/Ranchero-Software/NetNewsWire) that adds automatic YouTube video description fetching for YouTube RSS feeds.
+This is a fork of [NetNewsWire](https://github.com/Ranchero-Software/NetNewsWire) that automatically fetches YouTube video description & thumbnails for YouTube RSS feeds.  
+**NOTE: GOOGLE API KEY IS REQUIRED** Currently, the key must be inserted in the source, so you must be able to build this project in xcode in order to try out the feature. Future improvement: read the API KEY from a config file, or allow user to supply via UI. Once I have that, I can post a runnable binary.
 
 ## What This Does
 
@@ -35,6 +36,10 @@ This approach was chosen to:
 
 This minimal footprint makes the enhancement easy to review, maintain, or remove if needed.
 
+## Future 
+potential feature enhancement: batch retrieve/ import all YT subscriptions as feeds.  
+show some/all of transcript. (no official YouTube API, but solutions exist, such as python library, "youtube-transcript-api"
+
 ## Setup
 
 1. Clone this fork and build in Xcode (see original NetNewsWire build instructions)
@@ -42,4 +47,4 @@ This minimal footprint makes the enhancement easy to review, maintain, or remove
 3. Add your API key to `YouTubeVideoInfo.swift`:
    ```swift
    static let apiKey = "YOUR_API_KEY_HERE"
-**You MUST insert an API Key, or no video descriptions will appear**
+**You MUST insert an API Key, and rebuild the app, or no video descriptions will appear**
