@@ -6,7 +6,7 @@ This is a fork of [NetNewsWire](https://github.com/Ranchero-Software/NetNewsWire
 ## What This Does
 
 YouTube channels' RSS feed only includes video titles - no descriptions or transcripts. This enhancement automatically fetches and displays the full video description when you select a YouTube video in your feed.  
-It also indicates when entries are youtube "shorts", by prepending 📱 to the item's title.
+It also indicates when entries are youtube "shorts", by prepending 📱 to the item's title in the timeline.
 
 ### Without Video descriptions & thumbnails:
 ![Screenshot 2025-07-13 at 3 06 20 PM](https://github.com/user-attachments/assets/91aa628f-f8b5-4c97-8768-46138a1fc7bf)
