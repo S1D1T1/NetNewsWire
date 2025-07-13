@@ -1,6 +1,6 @@
 # NetNewsWire with YouTube Enhancement
 
-This is a fork of [NetNewsWire](https://github.com/Ranchero-Software/NetNewsWire) that automatically fetches YouTube video description & thumbnails for YouTube RSS feeds.  
+This is a fork of [NetNewsWire](https://github.com/Ranchero-Software/NetNewsWire) that automatically fetches YouTube video description, duration, & thumbnail for YouTube RSS feeds.  
 **NOTE: GOOGLE API KEY IS REQUIRED** Currently, the key must be inserted in the source, so you must be able to build this project in xcode in order to try out the feature. Future improvement: read the API KEY from a config file, or allow user to supply via UI. Once I have that, I can post a runnable binary.
 
 ## What This Does
