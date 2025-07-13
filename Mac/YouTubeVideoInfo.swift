@@ -12,28 +12,42 @@ import Foundation
 class YouTubeVideoInfo {
 	static let apiKey = "<YOUR API KEY HERE>"
 
+	/// filter Youtube videos
 	static func isYouTubeVideo(_ url: URL?) -> Bool {
 		guard let url else { return false }
 		return url.host?.contains("youtube.com") == true ||
 		url.host?.contains("youtu.be") == true
 	}
 
-	static func extractVideoID(from url: URL) -> String? {
-		// Handle youtube.com/watch?v=VIDEO_ID format
-		if url.host?.contains("youtube.com") == true,
-		   let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-		   let videoID = components.queryItems?.first(where: { $0.name == "v" })?.value {
-			return videoID
+	/// filter for YouTube Shorts - used to indicate short videos at a higher level of the UI - the article timeline.
+	static func isYouTubeShort(_ article:Article) -> Bool {
+		if let url = article.url,
+			isYouTubeVideo(url),
+		   url.absoluteString.contains("/shorts/") {
+			return true
 		}
-
-		// Handle youtu.be/VIDEO_ID format
-		if url.host?.contains("youtu.be") == true {
-			return url.pathComponents.last
-		}
-		return nil
+		return false
 	}
 
+	/// the key to identifying any youtube video. it's listed in the feed data
+	static func extractVideoID(from article: Article) -> String? {
+		// Check if it's in the unique ID (RSS guid)
+		let uniqueID = article.uniqueID
+		  if uniqueID.hasPrefix("yt:video:") {
+			return String(uniqueID.dropFirst(9))
+		}
+
+		// Fall back to URL parsing
+		return extractVideoID(from: article)
+	}
+
+	/// using Youtube official API, get the accompaying text beneath a video. This is not in the feed data.
+	/// requires an API key.
 	static func fetchVideoDescription(_ videoID: String) async -> String? {
+		guard apiKey != "<YOUR API KEY HERE>" else {
+			print("**API KEY MUST BE SUPPLIED BEFORE YOU CAN RETRIEVE YOUTUBE VIDEO DESCRIPTIONS**")
+			return String("**API KEY MUST BE SUPPLIED BEFORE YOU CAN RETRIEVE YOUTUBE VIDEO DESCRIPTIONS**")
+		}
 		let urlString = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=\(videoID)&key=\(apiKey)"
 		guard let url = URL(string: urlString) else { return nil }
 
@@ -44,7 +58,8 @@ class YouTubeVideoInfo {
 			if let items = json?["items"] as? [[String: Any]],
 			   let firstItem = items.first,
 			   let snippet = firstItem["snippet"] as? [String: Any],
-			   let description = snippet["description"] as? String {
+			   let description = snippet["description"] as? String
+			{
 				return description
 			}
 		} catch {
@@ -54,6 +69,7 @@ class YouTubeVideoInfo {
 		return nil
 	}
 
+	/// formatting for video dx
 	static func formatDescriptionAsHTML(_ description: String) -> String {
 		// Convert line breaks to <br> tags
 		let htmlDescription = description
@@ -69,25 +85,46 @@ class YouTubeVideoInfo {
 		</div>
 		"""
 	}
+
+	// the feed actually includes the thumbnail link with each entry. but hard to dig out from here.
+	/// just as easy to use a known formula.
+	static func thumbnailURL(for videoID: String) -> String {
+		// YouTube thumbnails follow a predictable pattern
+		return "https://i.ytimg.com/vi/\(videoID)/hqdefault.jpg"
+		// Or use maxresdefault.jpg for higher quality
+	}
+
 }
 
+/// extend DetailWebViewController to display extra info for Youtube Videos. Including video description and thumbnail
 extension DetailWebViewController {
 	func addYouTubeInfo(_ articleURL: URL, _ rendering: ArticleRenderer.Rendering) -> ArticleRenderer.Rendering {
-		guard let videoID = YouTubeVideoInfo.extractVideoID(from: articleURL) else {
+		guard let article,
+			  let videoID = YouTubeVideoInfo.extractVideoID(from: article) else {
 			return rendering
 		}
 
+		// Use thumbnail from RSS feed
+		let imageURL = YouTubeVideoInfo.thumbnailURL(for: videoID)
+		let	thumbnailHTML = """
+	<div style='margin: 20px 0;'>
+	 <img src='\(imageURL)' style='max-width: 100%; height: auto; border-radius: 8px;' />
+	</div>
+	"""
 		// Generate a unique div ID for this video
 		let divID = "youtube-info-\(videoID)"
 
 		// Inject placeholder HTML with the div ID
+		// adding: thumb
 		let placeholderHTML = """
-		<div id="\(divID)" style='background: #f9f9f9; padding: 20px; margin: 20px 0; border-radius: 8px;'>
-			<p>Loading YouTube video info...</p>
-		</div>
-		"""
+	  <div id="\(divID)" style='background: #f9f9f9; padding: 20px; margin: 20px 0; border-radius: 8px;'>
+	   \(thumbnailHTML)
+	   <p>Loading YouTube video description...</p>
+	  </div>
+	  """
 
 		// Start async fetch
+		// when it returns, inject the data into the placeholder html.
 		Task {
 			if let description = await YouTubeVideoInfo.fetchVideoDescription(videoID) {
 				let formattedHTML = YouTubeVideoInfo.formatDescriptionAsHTML(description)
@@ -95,7 +132,10 @@ extension DetailWebViewController {
 				// Update the WebView content
 				await MainActor.run {
 					let js = """
-					document.getElementById('\(divID)').innerHTML = `\(formattedHTML)`;
+					const div = document.getElementById('\(divID)');
+					const img = div.querySelector('img');
+					div.innerHTML = `\(formattedHTML)`;
+					if (img) { div.insertBefore(img, div.firstChild); }
 					"""
 					self.webView.evaluateJavaScript(js)
 				}
@@ -103,9 +143,10 @@ extension DetailWebViewController {
 		}
 
 		return ArticleRenderer.Rendering(
-						style: rendering.style,
-						html: rendering.html + placeholderHTML,
-						title: rendering.title,
-						baseURL: rendering.baseURL)
+			style: rendering.style,
+			html: rendering.html + placeholderHTML,
+			title: rendering.title,
+			baseURL: rendering.baseURL
+		)
 	}
 }
