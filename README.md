@@ -24,11 +24,11 @@ YouTube's RSS feeds are sparse, containing only:
 - Thumbnail
 - Basic metadata
 
-The actual video description (which often contains timestamps, links, and important context) is not included in the RSS feed. This fork adds that missing information by making YouTube API calls when you select a video in the timeline. In short, it's the stuff I use to determine if I actually want to watch.
+The actual video description (which often contains timestamps, links, and important context) is not included in the RSS feed. This fork adds that missing information by making YouTube API calls when you select a video in the timeline. In short, it's the stuff I use to know if I actually want to watch.
 
 ## Technical Approach
 
-This enhancement only uses Google's official YouTube APIs.
+This enhancement only uses Google's official YouTube APIs. (No webscraping)
 
 This enhancement works at the display layer rather than modifying NetNewsWire's core RSS parsing:
 
@@ -47,7 +47,7 @@ This approach was chosen to:
 - **One new file**,`YouTubeVideoInfo.swift` containing all YouTube-specific logic
 
 ## Future 
-potential feature enhancement: batch retrieve/ import all YT subscriptions as feeds.  
+batch retrieve/ import all YT subscriptions as feeds.  
 show some/all of transcript. (no official YouTube API, but solutions exist, such as python library, "youtube-transcript-api"
 
 ## Setup
